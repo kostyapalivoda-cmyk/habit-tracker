@@ -9,6 +9,9 @@
       --bg: #f7f7f5;
       --text: #1f1f1f;
       --muted: #6b6b6b;
+      --border: #d9d9d4;
+      --field: #ffffff;
+      --accent: #2f6f4f;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -16,6 +19,9 @@
         --bg: #1a1a1a;
         --text: #f0f0f0;
         --muted: #a0a0a0;
+        --border: #3a3a3a;
+        --field: #242424;
+        --accent: #3d8a63;
       }
     }
 
@@ -47,12 +53,114 @@
       color: var(--muted);
       font-size: 1.125rem;
     }
+
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin: 32px 0 24px;
+    }
+
+    .add-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .add-form button {
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .habits {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .habits li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+
+    .empty {
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
   <main>
     <h1>Трекер привычек</h1>
     <p class="subtitle">Отмечайте, что сделали сегодня</p>
+
+    <form class="add-form" id="add-form">
+      <input id="habit-input" type="text" placeholder="Новая привычка" required>
+      <button type="submit">Добавить</button>
+    </form>
+
+    <ul class="habits" id="habits"></ul>
+    <p class="empty" id="empty">Пока ничего не добавлено</p>
   </main>
+
+  <script>
+    const STORAGE_KEY = 'habits';
+
+    const form = document.getElementById('add-form');
+    const input = document.getElementById('habit-input');
+    const list = document.getElementById('habits');
+    const empty = document.getElementById('empty');
+
+    // Загружает список из localStorage; если там пусто или мусор — пустой список
+    function loadHabits() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return Array.isArray(saved) ? saved : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHabits() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+      } catch {
+        // Хранилище недоступно (например, приватный режим) — список живёт до перезагрузки
+      }
+    }
+
+    function render() {
+      list.innerHTML = '';
+      for (const habit of habits) {
+        const item = document.createElement('li');
+        item.textContent = habit;
+        list.appendChild(item);
+      }
+      empty.hidden = habits.length > 0;
+    }
+
+    let habits = loadHabits();
+    render();
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      habits.push(text);
+      saveHabits();
+      render();
+      input.value = '';
+      input.focus();
+    });
+  </script>
 </body>
 </html>
